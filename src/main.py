@@ -1,13 +1,21 @@
-from os import stat
-from fastapi import FastAPI, Depends, HTTPException
+from os import name, stat
+
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import HTMLResponse, FileResponse
+
 from starlette.routing import request_response
-from .auth import AuthHandler
-from databases import Database
+
 from typing import List
+
 from sqlalchemy import update
 from sqlalchemy.orm import Session
+
 from . import models, schemas
 from .database import SessionLocal, engine
+from .auth import AuthHandler
 
 ###
 ###
@@ -20,6 +28,9 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
+templates = Jinja2Templates(directory="src/templates")
+
 def get_db():
     db = SessionLocal()
     try:
@@ -28,6 +39,19 @@ def get_db():
         db.close()
 
 auth_handler = AuthHandler()
+
+origins = [
+    'http://localhost',
+    'http://127.0.0.1'
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = ['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 ###
 ###
@@ -86,6 +110,17 @@ def get_item_by_id(db: Session, id: int):
 
 ###
 ###
+### Utility
+###
+###
+
+@app.get('/favicon.ico')
+async def favicon():
+    favicon_path = 'src/static/favicon.ico'
+    return FileResponse(path=favicon_path)
+
+###
+###
 ### Logging and registering
 ###
 ###
@@ -112,10 +147,27 @@ def login(auth_details: schemas.AuthDetails, db: Session = Depends(get_db)):
 ###
 ###
 
+@app.get("/", response_class=HTMLResponse)
+async def homepage(request: Request):
+    return templates.TemplateResponse("index.html", { "request": request, "id": id })
+
 @app.get("/wines/", response_model=List[schemas.Item])
 def get_wines(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
     wines = get_all_wines(db, skip=skip, limit=limit)
     return wines
+
+@app.get("/showwine/{id}", response_class=HTMLResponse)
+async def winepage(request: Request):
+    return templates.TemplateResponse("wine.html", { "request": request, "id": id })
+
+@app.get("/wine/{id}", response_model=schemas.Item)
+def get_wine(id: int, db: Session = Depends(get_db)):
+    wine = get_item_by_id(db, id)
+
+    if (wine is None):
+        raise HTTPException(status_code=404, detail="No wine of ID " + str(id) + " found")
+    
+    return wine
 
 @app.post("/order/", response_model=schemas.Order)
 def place_order(order: schemas.OrderCreate, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):

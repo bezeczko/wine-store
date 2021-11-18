@@ -1,0 +1,15 @@
+.container {
+    text-align: center;
+    margin: auto;
+    width: 60%;
+}
+
+#title {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+#wine-container {
+    margin: auto;
+    width: 50%;
+}
