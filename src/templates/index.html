@@ -17,18 +17,81 @@
             <div class="p-2"><h1 class="display-4 float-right">Sklep z winem</h1></div>
         </div>      
 
-        <div id="wine-container">
+        <!-- <div class="navbar-container">
+            <nav class="navbar">
+                <ul class="navbar-navtext-center">
+                    <li class="nav-link" id="mainpage" onclick="mainpage_click()">Strona główna</li>
+                    <li class="nav-link" id="loginpage" onlick="login_click()">Zaloguj</li>
+                </ul>
+            </nav>
+        </div> -->
 
+        <ul class="nav nav-pills nav-fill text-center">
+            <li class="nav-item" onclick="mainpage_click()">Strona główna</li>
+            <li id="loginButton" class="nav-item" onclick="login_click()">Zaloguj</li>
+            <li class="nav-item"><div class="p-2"><img onclick="basket()" class="float-right" src="{{url_for('static', path='/shopping-basket-solid.svg')}}" width="30px" height="30px"></div></li>
+        </ul>
+
+        <div id="wine-list">
             <table class="table table-striped" id="wine-table">
                 <thead>
                     <tr>
                         <th scope="col">Nazwa</th>
                         <th scope="col">Cena</th>
+                        <th scope="col"></th>
                     </tr>
                 </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div id="wine-container" hidden>
+     
+            <h1 id="wine-error" hidden></h1>
+
+            <table class="table table-striped" id="wine-table">
             </table>
 
         </div>
+
+        <div id="loginpage" hidden>
+            
+            <h2>Zaloguj się</h2>
+
+            <form id="loginpageform">
+                <div class="mb-3">
+                    <label for="loginEmailInput">Email:</label>
+                    <input type="email" id="loginEmailInput" class="form-control" placeholder="Podaj swój adres email">
+                </div>
+                <div class="mb-3">
+                    <label for="loginPasswordInput">Hasło:</label>
+                    <input type="password" id="loginPasswordInput" class="form-control" placeholder="Podaj hasło">
+                </div>
+                <button id="loginFormButton" type="button" class="btn btn-primary btn-lg btn-block" onclick="login()">Zaloguj</button>
+                <button id="registerFormButton" type="button" class="btn btn-warning btn-lg btn-block" onclick="register()">Zarejestruj się</button>
+            </form>
+
+        </div>
+
+        <div id="basketpage" hidden>
+            
+            <h2>Koszyk</h2>
+            
+            <table class="table table-striped" id="basket-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Nazwa</th>
+                        <th scope="col">Cena/szt</th>
+                        <th scope="col">Ilość</th>
+                        <th scope="col">Ilość * cena/szt</th>
+                        <th scope="col"></th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    
     </div>
 
 

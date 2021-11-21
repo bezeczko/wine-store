@@ -37,6 +37,19 @@ class Item(Base):
     color = Column(String, index=True)
     style = Column(String, index=True)
 
+BasketItemRelation = Table('basketitemrelation', Base.metadata,
+    Column('basket_id', Integer, ForeignKey("baskets.id")),
+    Column('item_id', Integer, ForeignKey('items.id'))    
+)
+
+class Basket(Base):
+    __tablename__ = "baskets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    item = relationship("Item", secondary=BasketItemRelation)
+    amount = Column(Integer, index=True)
+
 # class Link(Base):
 #     __tablename__ = "link"
 #     order_id = Column(Integer, ForeignKey("orders.id"), primary_key=True)

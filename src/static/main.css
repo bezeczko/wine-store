@@ -9,7 +9,19 @@
     padding-bottom: 15px;
 }
 
+.nav-item {
+    cursor: pointer;
+}
+
 #wine-container {
     margin: auto;
     width: 50%;
+}
+
+#loginpageform {
+    text-align: left;
+}
+
+.addToBasket {
+    cursor: pointer;
 }

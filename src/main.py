@@ -1,14 +1,14 @@
 from os import name, stat
 
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request, Cookie
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import HTMLResponse, FileResponse
+from starlette.responses import HTMLResponse, FileResponse, JSONResponse, Response
 
 from starlette.routing import request_response
 
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import update
 from sqlalchemy.orm import Session
@@ -108,6 +108,44 @@ def get_all_wines(db: Session, skip: int = 0, limit: int = 100):
 def get_item_by_id(db: Session, id: int):
     return db.query(models.Item).filter(models.Item.id == id).first()
 
+def get_users_basket_items(db: Session, id: int):
+    return db.query(models.Basket).filter(models.Basket.owner_id == id).all()
+
+def add_item_to_basket(db: Session, user: schemas.User, basket: schemas.BasketCreate):
+    
+    user_baskets = get_users_basket_items(db, user.id)
+    db_item = get_item_by_id(db, basket.item_id)
+    
+    item_found = False
+
+    for b in user_baskets:
+        if b.item[0].id == db_item.id:
+            b.amount = b.amount + 1
+            db_basket = b
+            item_found = True
+            break
+
+    if not item_found:
+        db_basket = models.Basket(owner_id = user.id, amount=1)
+        db_basket.item.append(db_item)
+        db.add(db_basket)
+        db.commit()
+        db.refresh(db_basket)
+        return db_basket
+    else:
+        db.commit()
+        db.refresh(db_basket)
+        return db_basket
+    
+    
+
+def delete_items_from_basket(db: Session, user: schemas.User):
+    db.query(models.Basket).filter(models.Basket.owner_id == user.id).delete()
+    db.commit()
+    return
+
+# def update_basket()
+
 ###
 ###
 ### Utility
@@ -116,7 +154,7 @@ def get_item_by_id(db: Session, id: int):
 
 @app.get('/favicon.ico')
 async def favicon():
-    favicon_path = 'src/static/favicon.ico'
+    favicon_path = 'src/static/favicon.png'
     return FileResponse(path=favicon_path)
 
 ###
@@ -139,7 +177,8 @@ def login(auth_details: schemas.AuthDetails, db: Session = Depends(get_db)):
     if (user is None) or (not auth_handler.verify_password(auth_details.password, user.hashed_password)):
         raise HTTPException(status_code=401, detail='Invalid username and/or password')
     token = auth_handler.encode_token(user.username) 
-    return {'token': token}
+    content = { "message": "Successfuly authenticated", "token": token }
+    return content
 
 ###
 ###
@@ -193,6 +232,23 @@ def check_order_endpoint(id: int, db: Session = Depends(get_db), username = Depe
         raise HTTPException(status_code=403, detail='User does not have sufficient privileges')   
 
     return get_order_by_id(db, id)
+
+@app.get("/basket/", response_model=List[schemas.Basket])
+def get_basket(db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
+    user = get_user_by_email(db, username)
+    basket_items = get_users_basket_items(db, user.id)
+    return basket_items
+
+@app.post("/basket/", response_model=schemas.Basket)
+def add_to_basket(item: schemas.BasketCreate, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
+    user = get_user_by_email(db, username)
+    return add_item_to_basket(db, user, item)
+
+@app.delete("/basket/")
+def clear_basket(db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
+    user = get_user_by_email(db, username)
+    delete_items_from_basket(db, user)
+    return
 
 ###
 ###

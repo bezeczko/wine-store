@@ -45,6 +45,20 @@ class User(UserBase):
     class Config:
         orm_mode = True
 
+class BasketBase(BaseModel):
+    pass
+
+class BasketCreate(BasketBase):
+    item_id: int
+
+class Basket(BasketBase):
+    owner_id: int
+    item: List[Item] = []
+    amount: int
+
+    class Config:
+        orm_mode = True
+
 class AuthDetails(BaseModel):
     username: str
     password: str
