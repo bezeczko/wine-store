@@ -1,22 +1,29 @@
 var mainPage = document.getElementById("wine-list");
 var loginPage = document.getElementById("loginpage");
 var basketPage = document.getElementById("basketpage")
+var wineContainer = document.getElementById("wine-container");
+var userPanel = document.getElementById("user-panel");
 
 function mainpage_click() {
     loginPage.hidden = true;
     basketPage.hidden = true;
+    wineContainer.hidden = true;
+    userPanel.hidden = true;
     mainPage.hidden = false;
+    
 }
 
 function login_click() {
 
-    if(document.getElementById("loginButton").innerHTML == "Zaloguj") {
+    if(document.getElementById("loginButton").innerHTML == "Zaloguj/zarejestruj") {
         mainPage.hidden = true;
         basketPage.hidden = true;
+        wineContainer.hidden = true;
+        userPanel.hidden = true;
         loginPage.hidden = false;
     } else {
         localStorage.setItem("fastapi_auth", null);
-        document.getElementById("loginButton").innerHTML = "Zaloguj";
+        document.getElementById("loginButton").innerHTML = "Zaloguj/zarejestruj";
     }  
 
 }
@@ -84,10 +91,13 @@ function login() {
     
     if (localStorage.getItem("fastapi_auth") == "null") {
          alert("Musisz być zalogowany!");
+         login_click();
     } else {
 
         mainPage.hidden = true;
         loginPage.hidden = true;
+        wineContainer.hidden = true;
+        userPanel.hidden = true;
         basketPage.hidden = false;
 
         var basketTable = document.getElementById("basket-table").getElementsByTagName("tbody")[0];
@@ -108,11 +118,13 @@ function login() {
                     for(var i=0; i<response.length; i++) {
                         let newRow = basketTable.insertRow(-1);
                         let nameCell = newRow.insertCell(0);
-                        let nameLink = document.createElement("a");
+                        let nameP = document.createElement('p');
                         let name = document.createTextNode(response[i]["item"][0]["name"]);
-                        nameLink.appendChild(name);
-                        nameLink.href = "/showwine/" + response[i]["item"][0]["id"];
-                        nameCell.appendChild(nameLink);
+                        nameP.appendChild(name);
+                        nameP.alt = response[i]["item"][0]["id"];
+                        nameP.onclick = showWineDetails;
+                        nameP.classList = ['name-click'];
+                        nameCell.appendChild(nameP);
 
                         let priceCell = newRow.insertCell(1);
                         let price = document.createTextNode(response[i]["item"][0]["price"] + " zł");
@@ -163,17 +175,62 @@ function login() {
                     totalRow.appendChild(total_price);
 
                 }
+            }, 
+            error: function(jqXHR) {
+                if (jqXHR.status === 401) {
+                    alert("Sesja wygasła. Zaloguj się ponownie.");
+                    login_click();
+                    login_click();
+                }
             }
         });
      }
  }
 
  function ib_addToBasket() {
-     console.log("Add to basket" + this.alt);
+
+    $.ajax({
+        url: '/basket/',
+        type: 'post',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            item_id: this.alt
+        }),
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('fastapi_auth'));
+        },
+        success: function(response) {
+            basket();
+        },
+        error: function() {
+            alert('Wystąpił błąd');
+        }
+    });
+
  }
 
  function ib_removeFromBasket() {
-     console.log("Remove from basket" + this.alt);
+     
+    $.ajax({
+        url: '/basket/',
+        type: 'delete',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            item_id: this.alt
+        }),
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('fastapi_auth'));
+        },
+        success: function(response) {
+            basket();
+        },
+        error: function() {
+            alert('Wystąpił błąd');
+        }
+    });
+
  }
 
  function addToBasket() {
@@ -194,12 +251,139 @@ function login() {
             },
             success: function(response) {
                 alert("Pomyślnie dodano " + response["item"][0]["name"] + " do koszyka");
+            },
+            error: function(jqXHR) {
+                if (jqXHR.status === 401) {
+                    alert("Sesja wygasła. Zaloguj się ponownie.");
+                    login_click();
+                    login_click();
+                }
             }
         });
     }
     
-
  }
+
+function place_order() {
+    $.ajax({
+        url: '/basket/',
+        type: 'get',
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader('Authorization', "Bearer " + localStorage.getItem("fastapi_auth"));
+        },
+        success: function(response) {
+            
+            var items = [];
+
+            for(var i=0; i<response.length; i++) {
+                items.push(JSON.stringify({
+                    item: response[i]["item"][0],
+                    amount: response[i]["amount"]
+                }));
+            }
+
+            $.ajax({
+                url: '/order/',
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    status: "Złożone",
+                    items: items,
+                    city: "Bydgoszcz",
+                    street: "Monte Cassino",
+                    building_number: "6/120",
+                    contact_number: "537474918"
+                }),
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('Authorization', "Bearer " + localStorage.getItem("fastapi_auth"));
+                },
+                success: function(response) {
+                    console.log(response);
+                }
+            })
+        }
+    });
+}
+
+function user_panel() {
+
+    if (localStorage.getItem("fastapi_auth") == "null") {
+        alert("Musisz być zalogowany!");
+        login_click();
+    } else {
+        mainPage.hidden = true;
+        loginPage.hidden = true;
+        wineContainer.hidden = true;
+        basketPage.hidden = true;
+        userPanel.hidden = false;
+
+        $.ajax({
+            url: '/orders/',
+            type: 'get',
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Authorization', "Bearer " + localStorage.getItem("fastapi_auth"));
+            },
+            success: function(response) {
+                console.log(response);
+            }
+        });
+    }
+}
+
+function showWineDetails() {
+    console.log(this.alt);
+    mainPage.hidden = true;
+    loginPage.hidden = true;
+    basketPage.hidden = true;
+    wineContainer.hidden = false;
+
+    $.ajax({
+        url: '/wine/' + this.alt,
+        type: 'get',
+        success: function(response) {
+            if (response!=0) {
+                console.log(response)
+                let wineName = document.getElementById("wine-container-name");
+                wineName.innerHTML = response["name"];
+                
+                let wineDesc = document.getElementById("wine-container-desc");
+                wineDesc.innerHTML = response["description"];
+
+                let winePrice = document.getElementById("wine-container-price");
+                winePrice.innerHTML = '<b>Cena: </b>' + response["price"] + ' zł';
+
+                let wineBtn = document.getElementById("wine-container-basket-button");
+                wineBtn.alt = response["id"];
+                wineBtn.onclick = addToBasket;
+
+                let wineDetailTable = document.getElementById("wine-container-table");
+                let newRow = wineDetailTable.insertRow(-1);
+                newRow.insertCell(0).appendChild(document.createTextNode("Kraj:"));
+                newRow.insertCell(1).appendChild(document.createTextNode(response["country"]));
+                newRow = wineDetailTable.insertRow(-1);
+                newRow.insertCell(0).appendChild(document.createTextNode("Region:"));
+                newRow.insertCell(1).appendChild(document.createTextNode(response["region"]));
+                newRow = wineDetailTable.insertRow(-1);
+                newRow.insertCell(0).appendChild(document.createTextNode("Kolor:"));
+                newRow.insertCell(1).appendChild(document.createTextNode(response["color"]));
+                newRow = wineDetailTable.insertRow(-1);
+                newRow.insertCell(0).appendChild(document.createTextNode("Styl:"));
+                newRow.insertCell(1).appendChild(document.createTextNode(response["style"]));
+                
+            }
+        },
+        error: function(jqXHR) {
+            if (jqXHR.status === 401) {
+                alert("Sesja wygasła. Zaloguj się ponownie.");
+                login_click();
+                login_click();
+            }
+        }
+    });
+
+    // let wineName = document.getElementById("wine-container-name");
+}
 
 function load_wines() {
     var wineTableBody = document.getElementById("wine-table").getElementsByTagName('tbody')[0];
@@ -212,11 +396,13 @@ function load_wines() {
                 for(var i=0; i<response.length; i++) {
                     let newRow = wineTableBody.insertRow(-1);
                     let nameCell = newRow.insertCell(0);
-                    let nameLink = document.createElement("a");
+                    let nameP = document.createElement('p');
                     let name = document.createTextNode(response[i]["name"]);
-                    nameLink.appendChild(name);
-                    nameLink.href = "/showwine/"+response[i]["id"];
-                    nameCell.appendChild(nameLink);
+                    nameP.appendChild(name);
+                    nameP.alt = response[i]["id"];
+                    nameP.onclick = showWineDetails;
+                    nameP.classList = ['name-click'];
+                    nameCell.appendChild(nameP);
                     let priceCell = newRow.insertCell(1);
                     let price = document.createTextNode(response[i]["price"] + " zł");
                     priceCell.appendChild(price);
@@ -242,7 +428,7 @@ $(document).ready(function() {
     if(localStorage.getItem("fastapi_auth") != "null") {
         document.getElementById("loginButton").innerHTML = "Wyloguj";
     } else {
-        document.getElementById("loginButton").innerHTML = "Zaloguj";
+        document.getElementById("loginButton").innerHTML = "Zaloguj/zarejestruj";
     }
     
     load_wines();

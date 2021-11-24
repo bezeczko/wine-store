@@ -17,16 +17,29 @@ class Item(ItemBase):
     class Config:
         orm_mode = True
 
+class ItemAmount(BaseModel):
+    item: int
+    amount: int
+
+    class Config:
+        orm_mode = True
+
 class OrderBase(BaseModel):
-    status: str
+    items: List[ItemAmount] = []
+    city: str
+    street: str
+    building_number: str
+    contact_number: str
+
 
 class OrderCreate(OrderBase):
-    owner_id = int
-    items_ids: List[int]
+    pass
+
 
 class Order(OrderBase):
     id: int
-    items: List[Item] = []
+    status: str
+    owner_id = int
     
     class Config:
         orm_mode = True
@@ -40,7 +53,6 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     is_admin: bool
-    orders: List[Order] = []
 
     class Config:
         orm_mode = True

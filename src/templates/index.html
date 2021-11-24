@@ -12,25 +12,24 @@
 
     <div class="container">
         
+        <!-- Logo -->
+
         <div class="d-flex justify-content-center" id="title">
             <div class="p-2"><a href="/" class="float-left"><img src="{{url_for('static', path='/wine.png')}}" width="100" height="100"></a></div>
             <div class="p-2"><h1 class="display-4 float-right">Sklep z winem</h1></div>
         </div>      
 
-        <!-- <div class="navbar-container">
-            <nav class="navbar">
-                <ul class="navbar-navtext-center">
-                    <li class="nav-link" id="mainpage" onclick="mainpage_click()">Strona główna</li>
-                    <li class="nav-link" id="loginpage" onlick="login_click()">Zaloguj</li>
-                </ul>
-            </nav>
-        </div> -->
+        <!-- Navigation -->
 
         <ul class="nav nav-pills nav-fill text-center">
             <li class="nav-item" onclick="mainpage_click()">Strona główna</li>
-            <li id="loginButton" class="nav-item" onclick="login_click()">Zaloguj</li>
+            <li class="nav-item" onclick="user_panel()">Panel użytkownika</li>
+            <li id="loginButton" class="nav-item" onclick="login_click()">Zaloguj/zarejestruj</li>
             <li class="nav-item"><div class="p-2"><img onclick="basket()" class="float-right" src="{{url_for('static', path='/shopping-basket-solid.svg')}}" width="30px" height="30px"></div></li>
         </ul>
+
+        <!-- Main page
+        Wines list -->
 
         <div id="wine-list">
             <table class="table table-striped" id="wine-table">
@@ -45,14 +44,49 @@
             </table>
         </div>
 
+        <!-- Wine's details -->
+
         <div id="wine-container" hidden>
      
-            <h1 id="wine-error" hidden></h1>
+            <h1 id="wine-container-name"></h1>
+            <p id="wine-container-desc"></p>
+            
+            <div class="d-flex justify-content-center">
+                <div class="p-2"><p id="wine-container-price" class="float-left"></p></div>
+                <div class="p-2"><button id="wine-container-basket-button" class="btn btn-success btn-lg btn-block float-right">Dodaj do koszyka</button></div>
+            </div>
+           
+            <p id="wine-container-additional-info">Dodatkowe informacje:</p>
+            
+            <table class="table table-stripped" id="wine-container-table"></table>
 
-            <table class="table table-striped" id="wine-table">
             </table>
 
         </div>
+
+        <!-- User panel -->
+
+        <div id="user-panel" hidden>
+            <br>
+            <h1>Panel użytkownika</h1>
+            <br>
+            <h2>Zamówienia</h2>
+            <br>
+            <table class="table table-striped" id="user-panel-orders-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Numer zamówienia</th>
+                        <th scope="col">Data złożenia zamówienia</th>
+                        <th scope="col">Wartość zamówienia</th>
+                        <th scope="col">Status zamówienia</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+        </div>
+
+        <!-- Login page -->
 
         <div id="loginpage" hidden>
             
@@ -73,6 +107,8 @@
 
         </div>
 
+        <!-- Basket -->
+
         <div id="basketpage" hidden>
             
             <h2>Koszyk</h2>
@@ -90,6 +126,7 @@
                 </thead>
                 <tbody></tbody>
             </table>
+            <button type="button" id="place-order-button" class="button btn-success btn-lg btn-block" onclick="place_order()">Złóż zamówienie</button>
         </div>
     
     </div>

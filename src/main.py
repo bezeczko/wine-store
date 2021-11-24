@@ -79,10 +79,14 @@ def create_wine(db: Session, wine: schemas.ItemBase):
     return db_wine
 
 def create_order(db: Session, user: schemas.User, order: schemas.OrderCreate):
-    db_order = models.Order(status="Złożone", owner_id=user.id)
-    for item in order.items_ids:
-        db_item = get_item_by_id(db, item)
-        db_order.items.append(db_item)
+
+    db_order = models.Order(status="Złożone", owner_id=user.id, city=order.city, street=order.street, building_number=order.building_number, contact_number=order.contact_number)
+    
+    for item in order.items:
+          a = models.OrderItemRelation(amount = item.amount)  
+          a.item = get_item_by_id(db, item.item)
+          db_order.items.append(a)
+
     db.add(db_order)
     db.commit()
     db.refresh(db_order)
@@ -137,12 +141,22 @@ def add_item_to_basket(db: Session, user: schemas.User, basket: schemas.BasketCr
         db.refresh(db_basket)
         return db_basket
     
-    
+def delete_item_from_basket(db: Session, user: schemas.User, basket: schemas.BasketCreate):
 
-def delete_items_from_basket(db: Session, user: schemas.User):
-    db.query(models.Basket).filter(models.Basket.owner_id == user.id).delete()
-    db.commit()
-    return
+    db_item = get_item_by_id(db, basket.item_id)
+    db_basket = db.query(models.Basket).filter(models.Basket.owner_id == user.id).filter(models.Basket.item.contains(db_item)).first()
+
+    if db_basket.amount > 1:
+        db_basket.amount -= 1
+        db.commit()
+        return 
+    else:
+        db.query(models.Basket).filter(models.Basket.id == db_basket.id).delete()
+        db.commit()
+        return
+
+def get_user_orders_db(db: Session, user: schemas.User):
+    return db.query(models.Order).filter(models.Order.owner_id == user.id).all()
 
 # def update_basket()
 
@@ -202,16 +216,24 @@ async def winepage(request: Request):
 @app.get("/wine/{id}", response_model=schemas.Item)
 def get_wine(id: int, db: Session = Depends(get_db)):
     wine = get_item_by_id(db, id)
-
     if (wine is None):
-        raise HTTPException(status_code=404, detail="No wine of ID " + str(id) + " found")
-    
+        raise HTTPException(status_code=404, detail="No wine of ID " + str(id) + " found")    
     return wine
+
+@app.get("/orders/", response_model=List[schemas.Order])
+def get_user_orders(db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
+    user = get_user_by_email(db, username)
+    return get_user_orders_db(db, user)
 
 @app.post("/order/", response_model=schemas.Order)
 def place_order(order: schemas.OrderCreate, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
     user = get_user_by_email(db, username)
-    return create_order(db, user, order)
+    
+    placed_order = create_order(db, user, order)
+
+    processed_order = schemas.Order(id=placed_order.id, status=placed_order.status, owner_id=placed_order.owner_id, items=placed_order.items, city=placed_order.city, street=placed_order.street, building_number=placed_order.building_number, contact_number=placed_order.contact_number)
+    
+    return processed_order
 
 @app.put("/cancelorder/", response_model=schemas.Order)
 def cancel_order_endpoint(id: int, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
@@ -245,9 +267,9 @@ def add_to_basket(item: schemas.BasketCreate, db: Session = Depends(get_db), use
     return add_item_to_basket(db, user, item)
 
 @app.delete("/basket/")
-def clear_basket(db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
+def clear_basket(item: schemas.BasketCreate, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
     user = get_user_by_email(db, username)
-    delete_items_from_basket(db, user)
+    delete_item_from_basket(db, user, item)
     return
 
 ###
@@ -256,7 +278,7 @@ def clear_basket(db: Session = Depends(get_db), username = Depends(auth_handler.
 ###
 ###
 
-@app.get("/admin/users/", response_model=List[schemas.User])
+@app.get("/admin/users/")
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
     
     user = get_user_by_email(db, username)

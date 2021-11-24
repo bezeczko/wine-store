@@ -1,3 +1,4 @@
+from operator import index
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Table
 from sqlalchemy.orm import relationship
 
@@ -10,20 +11,24 @@ class User(Base):
     hashed_password = Column(String)
     is_admin = Column(Boolean, default=False)
 
-    orders = relationship("Order")
-
-OrderItemRelation = Table('orderitemrelation', Base.metadata,
-    Column('order_id', Integer, ForeignKey("orders.id")),
-    Column('item_id', Integer, ForeignKey('items.id'))    
-)
+class OrderItemRelation(Base): 
+    __tablename__ = 'orderitemrelation'
+    order_id = Column(ForeignKey("orders.id"), primary_key=True)
+    item_id = Column(ForeignKey('items.id'), primary_key=True)
+    amount = Column(String)
+    item = relationship("Item")
 
 class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
-    items = relationship("Item", secondary=OrderItemRelation)
+    items = relationship("OrderItemRelation")
     status = Column(String, index=True)
+    city = Column(String, index=True)
+    street = Column(String, index=True)
+    building_number = Column(String, index=True)
+    contact_number = Column(String, index=True)
 
 class Item(Base):
     __tablename__ = "items"

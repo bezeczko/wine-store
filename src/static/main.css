@@ -25,3 +25,15 @@
 .addToBasket {
     cursor: pointer;
 }
+
+.name-click {
+    cursor: pointer;
+}
+
+#wine-container-desc {
+    text-align: justify;
+}
+
+#wine-container-additional-info {
+    text-align: left;
+}
