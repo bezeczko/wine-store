@@ -126,8 +126,32 @@
                 </thead>
                 <tbody></tbody>
             </table>
-            <button type="button" id="place-order-button" class="button btn-success btn-lg btn-block" onclick="place_order()">Złóż zamówienie</button>
+            <button type="button" id="go-to-order-button" class="button btn-success btn-lg btn-block" onclick="order_details()">Przejdź do składania zamówienia</button>
+
+            <div id="order-details" hidden>
+                <form id="orderdetailsform">
+                    <div class="mb-3">
+                        <label for="orderCity">Miasto:</label>
+                        <input type="text" id="orderCity" class="form-control" placeholder="Podaj miasto">
+                    </div>
+                    <div class="mb-3">
+                        <label for="orderStreet">Ulica:</label>
+                        <input type="text" id="orderStreet" class="form-control" placeholder="Podaj ulicę">
+                    </div>
+                    <div class="mb-3">
+                        <label for="orderBuildingNumber">Numer budynku:</label>
+                        <input type="text" id="orderBuildingNumber" class="form-control" placeholder="Podaj numer budynku">
+                    </div>
+                    <div class="mb-3">
+                        <label for="orderContactNumber">Telefon kontaktowy:</label>
+                        <input type="text" id="orderContactNumber" class="form-control" placeholder="Podaj numer kontaktowy">
+                    </div>
+                    <button id="orderPlaceButton" type="button" class="btn btn-primary btn-lg btn-block" onclick="place_order()">Złóż zamówienie</button>
+                </form>
+            </div>
+        
         </div>
+
     
     </div>
 

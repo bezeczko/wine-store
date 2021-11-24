@@ -23,7 +23,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
-    items = relationship("OrderItemRelation")
+    total = Column(Float, index=True)
     status = Column(String, index=True)
     city = Column(String, index=True)
     street = Column(String, index=True)

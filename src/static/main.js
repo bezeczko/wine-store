@@ -262,7 +262,12 @@ function login() {
         });
     }
     
- }
+}
+
+function order_details() {
+    let order_details = document.getElementById("order-details");
+    order_details.hidden = false;
+}
 
 function place_order() {
     $.ajax({
@@ -276,11 +281,23 @@ function place_order() {
             var items = [];
 
             for(var i=0; i<response.length; i++) {
-                items.push(JSON.stringify({
-                    item: response[i]["item"][0],
-                    amount: response[i]["amount"]
-                }));
+                items.push({
+                    "item": response[i]["item"][0]["id"],
+                    "amount": response[i]["amount"]
+                });
             }
+
+            console.log(items);
+
+            var city = $("#orderCity").val();
+            var street = $("#orderStreet").val();
+            var buildingNumber = $("#orderBuildingNumber").val();
+            var contactNumber = $("#orderContactNumber").val();
+
+            console.log(city);
+            console.log(street);
+            console.log(buildingNumber);
+            console.log(contactNumber);
 
             $.ajax({
                 url: '/order/',
@@ -288,12 +305,13 @@ function place_order() {
                 dataType: 'json',
                 contentType: 'application/json',
                 data: JSON.stringify({
-                    status: "Złożone",
-                    items: items,
-                    city: "Bydgoszcz",
-                    street: "Monte Cassino",
-                    building_number: "6/120",
-                    contact_number: "537474918"
+                    order: {
+                        "city": city,
+                        "street": street,
+                        "building_number": buildingNumber,
+                        "contact_number": contactNumber
+                    },
+                    items_amount: items
                 }),
                 beforeSend: function(xhr) {
                     xhr.setRequestHeader('Authorization', "Bearer " + localStorage.getItem("fastapi_auth"));

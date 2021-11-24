@@ -25,21 +25,19 @@ class ItemAmount(BaseModel):
         orm_mode = True
 
 class OrderBase(BaseModel):
-    items: List[ItemAmount] = []
     city: str
     street: str
     building_number: str
     contact_number: str
 
-
 class OrderCreate(OrderBase):
     pass
-
 
 class Order(OrderBase):
     id: int
     status: str
-    owner_id = int
+    owner_id: int
+    total: float
     
     class Config:
         orm_mode = True

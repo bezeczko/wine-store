@@ -78,14 +78,15 @@ def create_wine(db: Session, wine: schemas.ItemBase):
     db.refresh(db_wine)
     return db_wine
 
-def create_order(db: Session, user: schemas.User, order: schemas.OrderCreate):
+def create_order(db: Session, user: schemas.User, order: schemas.OrderCreate, items_amount: schemas.ItemAmount):
 
-    db_order = models.Order(status="Złożone", owner_id=user.id, city=order.city, street=order.street, building_number=order.building_number, contact_number=order.contact_number)
+    total = 0
+
+    for item in items_amount:
+        db_item = get_item_by_id(db, item.item)
+        total = total + db_item.price * item.amount
     
-    for item in order.items:
-          a = models.OrderItemRelation(amount = item.amount)  
-          a.item = get_item_by_id(db, item.item)
-          db_order.items.append(a)
+    db_order = models.Order(status="Złożone", total=total, owner_id=user.id, city=order.city, street=order.street, building_number=order.building_number, contact_number=order.contact_number)
 
     db.add(db_order)
     db.commit()
@@ -226,14 +227,9 @@ def get_user_orders(db: Session = Depends(get_db), username = Depends(auth_handl
     return get_user_orders_db(db, user)
 
 @app.post("/order/", response_model=schemas.Order)
-def place_order(order: schemas.OrderCreate, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
-    user = get_user_by_email(db, username)
-    
-    placed_order = create_order(db, user, order)
-
-    processed_order = schemas.Order(id=placed_order.id, status=placed_order.status, owner_id=placed_order.owner_id, items=placed_order.items, city=placed_order.city, street=placed_order.street, building_number=placed_order.building_number, contact_number=placed_order.contact_number)
-    
-    return processed_order
+def place_order(order: schemas.OrderCreate, items_amount: List[schemas.ItemAmount],  db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
+    user = get_user_by_email(db, username)    
+    return create_order(db, user, order, items_amount)
 
 @app.put("/cancelorder/", response_model=schemas.Order)
 def cancel_order_endpoint(id: int, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
