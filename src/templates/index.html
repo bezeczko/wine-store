@@ -128,7 +128,7 @@
             </table>
             <button type="button" id="go-to-order-button" class="button btn-success btn-lg btn-block" onclick="order_details()">Przejdź do składania zamówienia</button>
 
-            <div id="order-details" hidden>
+            <div id="order-details-form" hidden>
                 <form id="orderdetailsform">
                     <div class="mb-3">
                         <label for="orderCity">Miasto:</label>
@@ -150,6 +150,14 @@
                 </form>
             </div>
         
+        </div>
+
+        <div id="order-confirmation" hidden>
+
+            <h2>Potwierdzenie zamówienia</h2>
+
+            <table class="table table-striped" id="order-confirmation-table"></table>
+
         </div>
 
     

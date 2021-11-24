@@ -3,12 +3,14 @@ var loginPage = document.getElementById("loginpage");
 var basketPage = document.getElementById("basketpage")
 var wineContainer = document.getElementById("wine-container");
 var userPanel = document.getElementById("user-panel");
+var orderConfirmation = document.getElementById("order-confirmation");
 
 function mainpage_click() {
     loginPage.hidden = true;
     basketPage.hidden = true;
     wineContainer.hidden = true;
     userPanel.hidden = true;
+    orderConfirmation.hidden = true;
     mainPage.hidden = false;
     
 }
@@ -20,6 +22,7 @@ function login_click() {
         basketPage.hidden = true;
         wineContainer.hidden = true;
         userPanel.hidden = true;
+        orderConfirmation.hidden = true;
         loginPage.hidden = false;
     } else {
         localStorage.setItem("fastapi_auth", null);
@@ -98,6 +101,7 @@ function login() {
         loginPage.hidden = true;
         wineContainer.hidden = true;
         userPanel.hidden = true;
+        orderConfirmation.hidden = true;
         basketPage.hidden = false;
 
         var basketTable = document.getElementById("basket-table").getElementsByTagName("tbody")[0];
@@ -265,7 +269,7 @@ function login() {
 }
 
 function order_details() {
-    let order_details = document.getElementById("order-details");
+    let order_details = document.getElementById("order-details-form");
     order_details.hidden = false;
 }
 
@@ -318,6 +322,37 @@ function place_order() {
                 },
                 success: function(response) {
                     console.log(response);
+
+                    mainPage.hidden = true;
+                    loginPage.hidden = true;
+                    wineContainer.hidden = true;
+                    basketPage.hidden = true;
+                    userPanel.hidden = true;
+                    orderConfirmation.hidden = false;
+
+                    let orderConfirmationTable = document.getElementById("order-confirmation-table");
+                    let newRow = orderConfirmationTable.insertRow(-1);
+                    newRow.insertCell(0).appendChild(document.createTextNode("Numer zamówienia:"));
+                    newRow.insertCell(1).appendChild(document.createTextNode(response["id"]));
+                    newRow = orderConfirmationTable.insertRow(-1);
+                    newRow.insertCell(0).appendChild(document.createTextNode("Status:"));
+                    newRow.insertCell(1).appendChild(document.createTextNode(response["status"]));
+                    newRow = orderConfirmationTable.insertRow(-1);
+                    newRow.insertCell(0).appendChild(document.createTextNode("Numer kontaktowy:"));
+                    newRow.insertCell(1).appendChild(document.createTextNode(response["contact_number"]));
+                    newRow = orderConfirmationTable.insertRow(-1);
+                    newRow.insertCell(0).appendChild(document.createTextNode("Miasto:"));
+                    newRow.insertCell(1).appendChild(document.createTextNode(response["city"]));
+                    newRow = orderConfirmationTable.insertRow(-1);
+                    newRow.insertCell(0).appendChild(document.createTextNode("Ulica:"));
+                    newRow.insertCell(1).appendChild(document.createTextNode(response["street"]));
+                    newRow = orderConfirmationTable.insertRow(-1);
+                    newRow.insertCell(0).appendChild(document.createTextNode("Numer budynku:"));
+                    newRow.insertCell(1).appendChild(document.createTextNode(response["building_number"]));
+                    newRow = orderConfirmationTable.insertRow(-1);
+                    newRow.insertCell(0).appendChild(document.createTextNode("Wartość zamówienia:"));
+                    newRow.insertCell(1).appendChild(document.createTextNode(response["total"]));
+
                 }
             })
         }
@@ -334,6 +369,7 @@ function user_panel() {
         loginPage.hidden = true;
         wineContainer.hidden = true;
         basketPage.hidden = true;
+        orderConfirmation.hidden = true;
         userPanel.hidden = false;
 
         $.ajax({
@@ -354,6 +390,7 @@ function showWineDetails() {
     mainPage.hidden = true;
     loginPage.hidden = true;
     basketPage.hidden = true;
+    orderConfirmation.hidden = true;
     wineContainer.hidden = false;
 
     $.ajax({

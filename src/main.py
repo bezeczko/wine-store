@@ -156,6 +156,10 @@ def delete_item_from_basket(db: Session, user: schemas.User, basket: schemas.Bas
         db.commit()
         return
 
+def clear_basket(db: Session, user: schemas.User):
+    db.query(models.Basket).filter(models.Basket.owner_id == user.id).delete()
+    db.commit()
+
 def get_user_orders_db(db: Session, user: schemas.User):
     return db.query(models.Order).filter(models.Order.owner_id == user.id).all()
 
@@ -263,10 +267,16 @@ def add_to_basket(item: schemas.BasketCreate, db: Session = Depends(get_db), use
     return add_item_to_basket(db, user, item)
 
 @app.delete("/basket/")
-def clear_basket(item: schemas.BasketCreate, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
+def delete_from_basket(item: schemas.BasketCreate, db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
     user = get_user_by_email(db, username)
     delete_item_from_basket(db, user, item)
     return
+
+@app.delete("/clearbasket/")
+def clear_user_basket(db: Session = Depends(get_db), username = Depends(auth_handler.auth_wrapper)):
+    user = get_user_by_email(db, username)
+    clear_basket(db, user)
+    return 
 
 ###
 ###
